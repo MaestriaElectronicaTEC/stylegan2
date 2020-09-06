@@ -85,6 +85,7 @@ def project_real_images_from_directory(network_pkl, data_dir, num_snapshots, ima
         images = list()
         images.append(image)
         images = np.array(images)
+        images = images.transpose([0, 2, 3, 1])
         images = misc.adjust_dynamic_range(images, [0, 255], [-1, 1])
         project_image(proj, targets=images, png_prefix=dnnlib.make_run_dir_path('image%04d-' % idx), num_snapshots=num_snapshots)
 
