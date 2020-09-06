@@ -6,6 +6,7 @@
 
 """Multi-resolution input data pipeline."""
 
+import cv2
 import os
 import glob
 import numpy as np
@@ -194,6 +195,22 @@ def load_dataset(class_name=None, data_dir=None, verbose=False, **kwargs):
         print('Dataset shape =', np.int32(dataset.shape).tolist())
         print('Dynamic range =', dataset.dynamic_range)
         print('Label size    =', dataset.label_size)
+    return dataset
+
+#----------------------------------------------------------------------------
+# Helper func for constructing a dataset array from a directory of images.
+
+def load_dataset_from_directory(data_dir=None, image_size=64):
+    img_list = glob.glob(data_dir + '*.png')
+    dataset = list()
+
+    if data_dir is not None:
+        for img_path in img_list:
+            img = cv2.imread(img_path)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = cv2.resize(img, (image_size, image_size), interpolation = cv2.INTER_NEAREST)
+            dataset.append(img)
+
     return dataset
 
 #----------------------------------------------------------------------------

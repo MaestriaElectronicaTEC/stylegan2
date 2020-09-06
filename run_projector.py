@@ -70,6 +70,23 @@ def project_real_images(network_pkl, dataset_name, data_dir, num_images, num_sna
 
 #----------------------------------------------------------------------------
 
+def project_real_images_from_directory(network_pkl, data_dir, num_snapshots, image_size):
+    print('Loading networks from "%s"...' % network_pkl)
+    _G, _D, Gs = pretrained_networks.load_networks(network_pkl)
+    proj = projector.Projector()
+    proj.set_network(Gs)
+
+    print('Loading images from "%s"...' % data_dir)
+    dataset_obj = dataset.load_dataset_from_directory(data_dir, image_size)
+    assert dataset_obj is not None
+
+    for idx, image in enumerate(dataset_obj):
+        print('Projecting image %d/%d ...' % (idx, len(dataset_obj)))
+        image = misc.adjust_dynamic_range(image, [0, 255], [-1, 1])
+        project_image(proj, targets=image, png_prefix=dnnlib.make_run_dir_path('image%04d-' % idx), num_snapshots=num_snapshots)
+
+#----------------------------------------------------------------------------
+
 def _parse_num_range(s):
     '''Accept either a comma separated list of numbers 'a,b,c' or a range 'a-c' and return as a list of ints.'''
 
@@ -119,6 +136,13 @@ Run 'python %(prog)s <subcommand> --help' for subcommand help.''',
     project_real_images_parser.add_argument('--num-snapshots', type=int, help='Number of snapshots (default: %(default)s)', default=5)
     project_real_images_parser.add_argument('--num-images', type=int, help='Number of images to project (default: %(default)s)', default=3)
     project_real_images_parser.add_argument('--result-dir', help='Root directory for run results (default: %(default)s)', default='results', metavar='DIR')
+
+    project_real_images_from_directory_parser = subparsers.add_parser('project-real-images-from-directory', help='Project real images in a directory')
+    project_real_images_from_directory_parser.add_argument('--network', help='Network pickle filename', dest='network_pkl', required=True)
+    project_real_images_from_directory_parser.add_argument('--data-dir', help='Dataset root directory', required=True)
+    project_real_images_from_directory_parser.add_argument('--num-snapshots', type=int, help='Number of snapshots (default: %(default)s)', default=5)
+    project_real_images_from_directory_parser.add_argument('--image-size', type=int, help='Image size of input images (default: %(default)s)', default=64)
+    project_real_images_from_directory_parser.add_argument('--result-dir', help='Root directory for run results (default: %(default)s)', default='results', metavar='DIR')
 
     args = parser.parse_args()
     subcmd = args.command
