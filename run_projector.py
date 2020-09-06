@@ -160,7 +160,8 @@ Run 'python %(prog)s <subcommand> --help' for subcommand help.''',
 
     func_name_map = {
         'project-generated-images': 'run_projector.project_generated_images',
-        'project-real-images': 'run_projector.project_real_images'
+        'project-real-images': 'run_projector.project_real_images',
+        'project-real-images-from-directory': 'run_projector.project_real_images_from_directory'
     }
     dnnlib.submit_run(sc, func_name_map[subcmd], **kwargs)
 
