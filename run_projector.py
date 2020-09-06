@@ -82,8 +82,11 @@ def project_real_images_from_directory(network_pkl, data_dir, num_snapshots, ima
 
     for idx, image in enumerate(dataset_obj):
         print('Projecting image %d/%d ...' % (idx, len(dataset_obj)))
-        image = misc.adjust_dynamic_range(image, [0, 255], [-1, 1])
-        project_image(proj, targets=image, png_prefix=dnnlib.make_run_dir_path('image%04d-' % idx), num_snapshots=num_snapshots)
+        images = list()
+        images.append(image)
+        images = np.array(images)
+        images = misc.adjust_dynamic_range(images, [0, 255], [-1, 1])
+        project_image(proj, targets=images, png_prefix=dnnlib.make_run_dir_path('image%04d-' % idx), num_snapshots=num_snapshots)
 
 #----------------------------------------------------------------------------
 
