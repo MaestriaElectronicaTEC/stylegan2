@@ -81,11 +81,11 @@ def project_real_images_from_directory(network_pkl, data_dir, num_snapshots, ima
     assert dataset_obj is not None
 
     for idx, image in enumerate(dataset_obj):
-        print('Projecting image %d/%d ...' % (idx, len(dataset_obj)))
+        print('Projecting image %d/%d ...' % (idx + 1, len(dataset_obj)))
         images = list()
         images.append(image)
         images = np.array(images)
-        images = images.transpose([0, 2, 3, 1])
+        images = images.transpose([0, 3, 1, 2])
         images = misc.adjust_dynamic_range(images, [0, 255], [-1, 1])
         project_image(proj, targets=images, png_prefix=dnnlib.make_run_dir_path('image%04d-' % idx), num_snapshots=num_snapshots)
 
