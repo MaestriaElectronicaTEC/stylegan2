@@ -217,10 +217,18 @@ class Projector:
         return tflib.run(self._images_expr, {self._noise_in: 0})
 
     def plot(self, filename):
+        dist_filename = filename + 'dist.png'
+        pyplot.title('Dist value')
         pyplot.plot(self._dist_list, label='dist')
+        pyplot.xlabel('Iteration')
+        pyplot.savefig(dist_filename)
+        pyplot.close()
+
+        loss_filename = filename + 'loss.png'
+        pyplot.title('Loss value')
         pyplot.plot(self._loss_list, label='loss')
         pyplot.xlabel('Iteration')
-        pyplot.savefig(filename)
+        pyplot.savefig(loss_filename)
         pyplot.close()
 
 #----------------------------------------------------------------------------
