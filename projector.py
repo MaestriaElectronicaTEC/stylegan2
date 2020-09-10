@@ -11,6 +11,8 @@ import dnnlib.tflib as tflib
 
 from training import misc
 
+from matplotlib import pyplot
+
 #----------------------------------------------------------------------------
 
 class Projector:
@@ -46,6 +48,9 @@ class Projector:
         self._opt                   = None
         self._opt_step              = None
         self._cur_step              = None
+
+        self._dist_list = list()
+        self._loss_list = list()
 
     def _info(self, *args):
         if self.verbose:
@@ -164,6 +169,10 @@ class Projector:
         self._opt.reset_optimizer_state()
         self._cur_step = 0
 
+        # Reset variables
+        self._dist_list.clear()
+        self._loss_list.clear()
+
     def step(self):
         assert self._cur_step is not None
         if self._cur_step >= self.num_steps:
@@ -184,6 +193,10 @@ class Projector:
         _, dist_value, loss_value = tflib.run([self._opt_step, self._dist, self._loss], feed_dict)
         tflib.run(self._noise_normalize_op)
 
+        # Store training variables
+        self._dist_list.append(dist_value)
+        self._loss_list.append(loss_value)
+
         # Print status.
         self._cur_step += 1
         if self._cur_step == self.num_steps or self._cur_step % 10 == 0:
@@ -202,5 +215,12 @@ class Projector:
 
     def get_images(self):
         return tflib.run(self._images_expr, {self._noise_in: 0})
+
+    def plot(self, filename):
+        pyplot.plot(self._dist_list, label='dist')
+        pyplot.plot(self._loss_list, label='loss')
+        pyplot.xlabel('Iteration')
+        pyplot.savefig(filename)
+        pyplot.close()
 
 #----------------------------------------------------------------------------
