@@ -13,6 +13,8 @@ import PIL.Image
 import PIL.ImageFont
 import dnnlib
 
+from skimage.color import rgb2lab
+
 #----------------------------------------------------------------------------
 # Convenience wrappers for pickle that are able to load data produced by
 # older versions of the code, and from external URLs.
@@ -69,6 +71,20 @@ def convert_to_pil_image(image, drange=[0,1]):
     image = np.rint(image).clip(0, 255).astype(np.uint8)
     fmt = 'RGB' if image.ndim == 3 else 'L'
     return PIL.Image.fromarray(image, fmt)
+
+def convert_to_pil_lab_image(image, drange=[0,1]):
+    assert image.ndim == 2 or image.ndim == 3
+    if image.ndim == 3:
+        assert image.shape[0] != 1
+        image = image.transpose(1, 2, 0) # CHW -> HWC
+
+    image = adjust_dynamic_range(image, drange, [0,255])
+    image = np.rint(image).clip(0, 255).astype(np.uint8)
+    image = rgb2lab(image)
+    return PIL.Image.fromarray(image, 'LAB')
+
+def save_lab_image_grid(images, filename, drange=[0,1], grid_size=None):
+    convert_to_pil_lab_image(create_image_grid(images, grid_size), drange).save(filename)
 
 def save_image_grid(images, filename, drange=[0,1], grid_size=None):
     convert_to_pil_image(create_image_grid(images, grid_size), drange).save(filename)
