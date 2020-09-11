@@ -157,7 +157,7 @@ class Projector:
     def start(self, target_images):
         assert self._Gs is not None
 
-        self._target_images_var = target_images
+        self._target_image = target_images
 
         # Prepare target images.
         self._info('Preparing target images...')
