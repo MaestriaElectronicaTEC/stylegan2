@@ -13,7 +13,7 @@ import PIL.Image
 import PIL.ImageFont
 import dnnlib
 
-from skimage.color import rgb2lab
+from skimage.color import rgb2lab, deltaE_cie76, deltaE_ciede2000, deltaE_ciede94, deltaE_cmc
 
 #----------------------------------------------------------------------------
 # Convenience wrappers for pickle that are able to load data produced by
@@ -72,7 +72,7 @@ def convert_to_pil_image(image, drange=[0,1]):
     fmt = 'RGB' if image.ndim == 3 else 'L'
     return PIL.Image.fromarray(image, fmt)
 
-def convert_to_pil_lab_image(image, drange=[0,1]):
+def convert_to_np_lab_image(image, drange=[0,1]):
     assert image.ndim == 2 or image.ndim == 3
     if image.ndim == 3:
         assert image.shape[0] != 1
@@ -81,10 +81,25 @@ def convert_to_pil_lab_image(image, drange=[0,1]):
     image = adjust_dynamic_range(image, drange, [0,255])
     image = np.rint(image).clip(0, 255).astype(np.uint8)
     image = rgb2lab(image)
-    return PIL.Image.fromarray(image, 'LAB')
+    return image
 
-def save_lab_image_grid(images, filename, drange=[0,1], grid_size=None):
-    convert_to_pil_lab_image(create_image_grid(images, grid_size), drange).save(filename)
+def diff_lab_images(ref_image, image, drange=[0,1], grid_size=None):
+    lab_reference = convert_to_np_lab_image(create_image_grid(ref_image, grid_size), drange)
+    lab_image = convert_to_np_lab_image(create_image_grid(image, grid_size), drange)
+
+    cie76_diff = deltaE_cie76(lab_reference, lab_image)
+    cie76_score = np.sum(cie76_diff)
+
+    ciede2000_diff = deltaE_ciede2000(lab_reference, lab_image)
+    ciede2000_score = np.sum(ciede2000_diff)
+
+    ciede94_diff = deltaE_ciede94(lab_reference, lab_image)
+    ciede94_score = np.sum(ciede94_diff)
+
+    cmc_diff = deltaE_cmc(lab_reference, lab_image)
+    cmc_score = np.sum(cmc_diff)
+
+    return (cie76_score, ciede2000_score, ciede94_score, cmc_score)
 
 def save_image_grid(images, filename, drange=[0,1], grid_size=None):
     convert_to_pil_image(create_image_grid(images, grid_size), drange).save(filename)

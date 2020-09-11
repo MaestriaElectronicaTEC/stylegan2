@@ -39,6 +39,7 @@ class Projector:
         self._noise_in              = None
         self._dlatents_expr         = None
         self._images_expr           = None
+        self._target_image          = None
         self._target_images_var     = None
         self._lpips                 = None
         self._dist                  = None
@@ -51,6 +52,10 @@ class Projector:
 
         self._dist_list = list()
         self._loss_list = list()
+        self._cie76_list = list()
+        self._ciede2000_list = list()
+        self._ciede94_list = list()
+        self._cmc_list = list()
 
     def _info(self, *args):
         if self.verbose:
@@ -152,6 +157,8 @@ class Projector:
     def start(self, target_images):
         assert self._Gs is not None
 
+        self._target_images_var = target_images
+
         # Prepare target images.
         self._info('Preparing target images...')
         target_images = np.asarray(target_images, dtype='float32')
@@ -172,6 +179,10 @@ class Projector:
         # Reset variables
         self._dist_list.clear()
         self._loss_list.clear()
+        self._cie76_list.clear()
+        self._ciede2000_list.clear()
+        self._ciede94_list.clear()
+        self._cmc_list.clear()
 
     def step(self):
         assert self._cur_step is not None
@@ -197,6 +208,12 @@ class Projector:
         self._dist_list.append(dist_value)
         self._loss_list.append(loss_value)
 
+        (cie76_score, ciede2000_score, ciede94_score, cmc_score) = misc.diff_lab_images(self._target_image, self.get_images())
+        self._cie76_list.append(cie76_score)
+        self._ciede2000_list.append(ciede2000_score)
+        self._ciede94_list.append(ciede94_score)
+        self._cmc_list.append(cmc_score)
+
         # Print status.
         self._cur_step += 1
         if self._cur_step == self.num_steps or self._cur_step % 10 == 0:
@@ -217,6 +234,34 @@ class Projector:
         return tflib.run(self._images_expr, {self._noise_in: 0})
 
     def plot(self, filename):
+        cie76_filename = filename + 'cie76.png'
+        pyplot.title('cie76 value')
+        pyplot.plot(self._cie76_list, label='cie76')
+        pyplot.xlabel('Iteration')
+        pyplot.savefig(cie76_filename)
+        pyplot.close()
+
+        ciede2000_filename = filename + 'ciede2000.png'
+        pyplot.title('ciede2000 value')
+        pyplot.plot(self._ciede2000_list, label='ciede2000')
+        pyplot.xlabel('Iteration')
+        pyplot.savefig(ciede2000_filename)
+        pyplot.close()
+
+        ciede94_filename = filename + 'ciede94.png'
+        pyplot.title('Dist value')
+        pyplot.plot(self._ciede94_list, label='ciede94')
+        pyplot.xlabel('Iteration')
+        pyplot.savefig(ciede94_filename)
+        pyplot.close()
+
+        cmc_filename = filename + 'cmc.png'
+        pyplot.title('Dist value')
+        pyplot.plot(self._cmc_list, label='cmc')
+        pyplot.xlabel('Iteration')
+        pyplot.savefig(cmc_filename)
+        pyplot.close()
+
         dist_filename = filename + 'dist.png'
         pyplot.title('Dist value')
         pyplot.plot(self._dist_list, label='dist')
